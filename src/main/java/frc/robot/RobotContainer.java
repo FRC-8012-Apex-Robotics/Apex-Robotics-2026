@@ -15,7 +15,6 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
@@ -24,7 +23,14 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+<<<<<<< Updated upstream
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+=======
+import frc.robot.subsystems.vision.Vision;
+import frc.robot.subsystems.vision.VisionIO;
+import frc.robot.subsystems.vision.VisionIOLimelight;
+import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
+>>>>>>> Stashed changes
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -40,7 +46,12 @@ public class RobotContainer {
   private final CommandXboxController controller = new CommandXboxController(0);
 
   // Dashboard inputs
+<<<<<<< Updated upstream
   private final LoggedDashboardChooser<Command> autoChooser;
+=======
+  // private final LoggedDashboardChooser<Command> autoChooser;
+  private final SendableChooser<Command> autoChooser;
+>>>>>>> Stashed changes
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -57,6 +68,14 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
                 new ModuleIOTalonFX(TunerConstants.BackRight));
 
+<<<<<<< Updated upstream
+=======
+        vision =
+            new Vision(
+                drive::addVisionMeasurement,
+                new VisionIOLimelight(camera0Name, drive::getRotation));
+
+>>>>>>> Stashed changes
         // The ModuleIOTalonFXS implementation provides an example implementation for
         // TalonFXS controller connected to a CANdi with a PWM encoder. The
         // implementations
@@ -85,6 +104,15 @@ public class RobotContainer {
                 new ModuleIOSim(TunerConstants.FrontRight),
                 new ModuleIOSim(TunerConstants.BackLeft),
                 new ModuleIOSim(TunerConstants.BackRight));
+<<<<<<< Updated upstream
+=======
+
+        vision =
+            new Vision(
+                drive::addVisionMeasurement,
+                new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, drive::getPose));
+
+>>>>>>> Stashed changes
         break;
 
       default:
@@ -96,10 +124,16 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {});
+<<<<<<< Updated upstream
+=======
+
+        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {});
+>>>>>>> Stashed changes
         break;
     }
 
     // Set up auto routines
+<<<<<<< Updated upstream
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
     // Set up SysId routines
@@ -118,6 +152,29 @@ public class RobotContainer {
     autoChooser.addOption(
         "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
+=======
+    autoChooser = AutoBuilder.buildAutoChooser();
+    SmartDashboard.putData("Auto Chooser", autoChooser);
+    /*
+       autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
+
+       // Set up SysId routines
+       autoChooser.addOption(
+           "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
+       autoChooser.addOption(
+           "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
+       autoChooser.addOption(
+           "Drive SysId (Quasistatic Forward)",
+           drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+       autoChooser.addOption(
+           "Drive SysId (Quasistatic Reverse)",
+           drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+       autoChooser.addOption(
+           "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
+       autoChooser.addOption(
+           "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+    */
+>>>>>>> Stashed changes
     // Configure the button bindings
     configureButtonBindings();
   }
