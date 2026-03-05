@@ -7,7 +7,11 @@
 
 package frc.robot;
 
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -17,6 +21,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
+import frc.robot.generated.IntakeConstants;
+import frc.robot.generated.ShooterConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
@@ -24,7 +30,14 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
-import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+import frc.robot.subsystems.intake.ArmIO;
+import frc.robot.subsystems.intake.ArmIOSpark;
+import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.RollerIO;
+import frc.robot.subsystems.intake.RollerIOSpark;
+import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.shooter.ShooterIO;
+import frc.robot.subsystems.shooter.ShooterIOTalonFX;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -35,6 +48,8 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
   // Subsystems
   private final Drive drive;
+  private final Intake intake;
+  private final Shooter shooter;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -56,6 +71,17 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.FrontRight),
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
                 new ModuleIOTalonFX(TunerConstants.BackRight));
+
+        intake =
+            new Intake(
+                new ArmIOSpark(IntakeConstants.kArmId, MotorType.kBrushless),
+                new RollerIOSpark(IntakeConstants.kRollerId, MotorType.kBrushless));
+
+        shooter = 
+            new Shooter(
+                new ShooterIOTalonFX(
+                    ShooterConstants.kLeftTalonId,
+                    ShooterConstants.kRightTalonId));
 
         // The ModuleIOTalonFXS implementation provides an example implementation for
         // TalonFXS controller connected to a CANdi with a PWM encoder. The
@@ -85,6 +111,12 @@ public class RobotContainer {
                 new ModuleIOSim(TunerConstants.FrontRight),
                 new ModuleIOSim(TunerConstants.BackLeft),
                 new ModuleIOSim(TunerConstants.BackRight));
+
+        intake =
+            new Intake(new ArmIO() {},new RollerIO() {});
+
+        shooter = 
+            new Shooter(new ShooterIO() {});
         break;
 
       default:
@@ -96,6 +128,12 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {});
+
+        intake =
+            new Intake(new ArmIO() {},new RollerIO() {});
+
+        shooter = 
+            new Shooter(new ShooterIO() {});
         break;
     }
 
@@ -160,6 +198,27 @@ public class RobotContainer {
                             new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
                     drive)
                 .ignoringDisable(true));
+
+    controller
+        .rightTrigger()
+        .whileTrue(
+            Commands.run(
+            () -> 
+                shooter.shoot()));
+
+    controller
+        .rightTrigger()
+        .whileFalse(
+            Commands.run(
+            () ->
+                shooter.stop()));
+
+    controller
+        .leftTrigger()
+        .onFalse(
+            Commands.runOnce(
+            () -> 
+                intake.retractArm()));
   }
 
   /**
