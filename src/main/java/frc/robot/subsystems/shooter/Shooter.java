@@ -3,19 +3,18 @@ package frc.robot.subsystems.shooter;
 import frc.robot.generated.ShooterConstants;
 
 public class Shooter {
-    
-    private final ShooterIO shooterIO;
 
-    public Shooter(ShooterIO shooterIO) {
-        this.shooterIO = shooterIO;
-    }
+  private final ShooterIO shooterIO;
 
-    public void shoot() {
-        shooterIO.spinAtVelocity(ShooterConstants.kSpinVelocity);
-    }
+  public Shooter(ShooterIO shooterIO) {
+    this.shooterIO = shooterIO;
+  }
 
-    public void stop() {
-        shooterIO.spinAtVelocity(0);
-    }
+  public void shoot() {
+    shooterIO.spinAtPercent(ShooterConstants.kSpinPercent);
+  }
 
+  public void stop() {
+    shooterIO.stopShooter();
+  }
 }

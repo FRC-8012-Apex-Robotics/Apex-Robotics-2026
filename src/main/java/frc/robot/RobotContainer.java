@@ -7,11 +7,8 @@
 
 package frc.robot;
 
-import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
-
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -21,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
+import frc.robot.generated.IndexerConstants;
 import frc.robot.generated.IntakeConstants;
 import frc.robot.generated.ShooterConstants;
 import frc.robot.generated.TunerConstants;
@@ -30,6 +28,9 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.subsystems.indexer.Indexer;
+import frc.robot.subsystems.indexer.IndexerIO;
+import frc.robot.subsystems.indexer.IndexerIOSpark;
 import frc.robot.subsystems.intake.ArmIO;
 import frc.robot.subsystems.intake.ArmIOSpark;
 import frc.robot.subsystems.intake.Intake;
@@ -38,6 +39,7 @@ import frc.robot.subsystems.intake.RollerIOSpark;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterIO;
 import frc.robot.subsystems.shooter.ShooterIOTalonFX;
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -50,6 +52,7 @@ public class RobotContainer {
   private final Drive drive;
   private final Intake intake;
   private final Shooter shooter;
+  private final Indexer indexer;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -77,11 +80,13 @@ public class RobotContainer {
                 new ArmIOSpark(IntakeConstants.kArmId, MotorType.kBrushless),
                 new RollerIOSpark(IntakeConstants.kRollerId, MotorType.kBrushless));
 
-        shooter = 
+        shooter =
             new Shooter(
                 new ShooterIOTalonFX(
-                    ShooterConstants.kLeftTalonId,
-                    ShooterConstants.kRightTalonId));
+                    ShooterConstants.kLeftTalonId, ShooterConstants.kRightTalonId));
+
+        indexer =
+            new Indexer(new IndexerIOSpark(IndexerConstants.kIndexerId, MotorType.kBrushless));
 
         // The ModuleIOTalonFXS implementation provides an example implementation for
         // TalonFXS controller connected to a CANdi with a PWM encoder. The
@@ -112,11 +117,11 @@ public class RobotContainer {
                 new ModuleIOSim(TunerConstants.BackLeft),
                 new ModuleIOSim(TunerConstants.BackRight));
 
-        intake =
-            new Intake(new ArmIO() {},new RollerIO() {});
+        intake = new Intake(new ArmIO() {}, new RollerIO() {});
 
-        shooter = 
-            new Shooter(new ShooterIO() {});
+        shooter = new Shooter(new ShooterIO() {});
+
+        indexer = new Indexer(new IndexerIO() {});
         break;
 
       default:
@@ -129,11 +134,11 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {});
 
-        intake =
-            new Intake(new ArmIO() {},new RollerIO() {});
+        intake = new Intake(new ArmIO() {}, new RollerIO() {});
 
-        shooter = 
-            new Shooter(new ShooterIO() {});
+        shooter = new Shooter(new ShooterIO() {});
+
+        indexer = new Indexer(new IndexerIO() {});
         break;
     }
 
@@ -171,9 +176,9 @@ public class RobotContainer {
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive,
-            () -> -controller.getLeftY(),
-            () -> -controller.getLeftX(),
-            () -> -controller.getRightX()));
+            () -> -(controller.getLeftY()),
+            () -> -(controller.getLeftX()),
+            () -> (controller.getRightX())));
 
     // Lock to 0° when A button is held
     controller
@@ -190,7 +195,7 @@ public class RobotContainer {
 
     // Reset gyro to 0° when B button is pressed
     controller
-        .b()
+        .y()
         .onTrue(
             Commands.runOnce(
                     () ->
@@ -202,23 +207,25 @@ public class RobotContainer {
     controller
         .rightTrigger()
         .whileTrue(
-            Commands.run(
-            () -> 
-                shooter.shoot()));
+            Commands.parallel(
+                Commands.run(() -> shooter.shoot()), Commands.run(() -> indexer.spinIndexer())));
 
     controller
         .rightTrigger()
-        .whileFalse(
-            Commands.run(
-            () ->
-                shooter.stop()));
+        .onFalse(
+            Commands.sequence(
+                Commands.runOnce(() -> shooter.stop()),
+                Commands.runOnce(() -> indexer.stopIndexer())));
 
     controller
         .leftTrigger()
-        .onFalse(
-            Commands.runOnce(
-            () -> 
-                intake.retractArm()));
+        .whileTrue(Commands.run(() -> intake.spinRollerAtPercent(IntakeConstants.kRollerPercent)));
+
+    controller.leftTrigger().onFalse(Commands.runOnce(() -> intake.stopRoller()));
+
+    controller
+        .povUp()
+        .whileTrue(Commands.run(() -> intake.spinArmAtPercent(IntakeConstants.kArmPercent)));
   }
 
   /**

@@ -7,30 +7,39 @@ import frc.robot.util.Conversions;
 
 public class Intake extends SubsystemBase {
 
-    private final ArmIO armIO;
-    private final RollerIO rollerIO;
-    private final double outAngle;
-    private final double inAngle;
+  private final ArmIO armIO;
+  private final RollerIO rollerIO;
+  private final double outAngle;
+  private final double inAngle;
 
+  public Intake(ArmIO armIO, RollerIO rollerIO) {
+    this.armIO = armIO;
+    this.rollerIO = rollerIO;
+    outAngle = Conversions.degreesToRadians(IntakeConstants.kOutPosition);
+    inAngle = Conversions.degreesToRadians(IntakeConstants.kInPosition);
+  }
 
-    public Intake(
-        ArmIO armIO,
-        RollerIO rollerIO) {
-        this.armIO = armIO;
-        this.rollerIO = rollerIO;
-        outAngle = Conversions.degreesToRadians(IntakeConstants.kOutPosition);
-        inAngle = Conversions.degreesToRadians(IntakeConstants.kInPosition);
-    }
+  public void extendArm() {
+    armIO.setArmPosition(new Rotation2d(outAngle));
+  }
 
-    public void extendArm() {
-        armIO.setArmPosition(new Rotation2d(outAngle));
-    }
+  public void retractArm() {
+    armIO.setArmPosition(new Rotation2d(inAngle));
+  }
 
-    public void retractArm() {
-        armIO.setArmPosition(new Rotation2d(inAngle));
-    }
+  public void spinRoller() {
+    rollerIO.setRollerPercent(IntakeConstants.kRollerPercent);
+  }
 
-    public void spinRoller() {
-        rollerIO.setRollerVelocity(IntakeConstants.kRollerVelocity);
-    }
+  public void spinRollerAtPercent(double percent) {
+    rollerIO.setRollerPercent(percent);
+  }
+
+  public void spinArmAtPercent(double percent) {
+    armIO.setArmPercent(percent);
+  }
+
+  public void stopRoller() {
+    rollerIO.stopRoller();
+  }
 }

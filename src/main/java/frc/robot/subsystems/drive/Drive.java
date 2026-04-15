@@ -231,6 +231,10 @@ public class Drive extends SubsystemBase {
 
     // Log optimized setpoints (runSetpoint mutates each state)
     Logger.recordOutput("SwerveStates/SetpointsOptimized", setpointStates);
+    SmartDashboard.putString("FL Setpoint", setpointStates[0].angle.toString());
+    SmartDashboard.putString("FR Setpoint", setpointStates[1].angle.toString());
+    SmartDashboard.putString("BL Setpoint", setpointStates[2].angle.toString());
+    SmartDashboard.putString("BR Setpoint", setpointStates[3].angle.toString());
   }
 
   /** Runs the drive in a straight line with the specified drive output. */
